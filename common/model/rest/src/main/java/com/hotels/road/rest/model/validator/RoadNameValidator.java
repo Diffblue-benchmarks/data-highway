@@ -30,7 +30,7 @@ public class RoadNameValidator implements ModelValidator<String> {
     return roadName;
   }
 
-  public static String validateRoadName(String roadName) {
+  public static String validateRoadName(String roadName) throws InvalidRoadNameException {
     return VALIDATOR.validate(roadName);
   }
 }

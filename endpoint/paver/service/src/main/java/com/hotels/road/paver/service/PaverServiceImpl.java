@@ -219,7 +219,7 @@ public class PaverServiceImpl implements PaverService {
         msg -> agentMessages.put("kafka", msg));
     return new RoadModel(
         road.getName(),
-        road.getType(),
+        road.getType().name(),
         road.getDescription(),
         road.getTeamName(),
         road.getContactEmail(),

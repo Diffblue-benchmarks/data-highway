@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.hotels.road.rest.model.validator.RoadNameValidator;
+import com.hotels.road.rest.model.validator.RoadTypeValidator;
 
 @Data
 public class BasicRoadModel {
@@ -50,7 +51,7 @@ public class BasicRoadModel {
   @JsonCreator
   public BasicRoadModel(
       @JsonProperty(value = "name", required = true) String name,
-      @JsonProperty("type") RoadType type,
+      @JsonProperty("type") String type,
       @JsonProperty("description") String description,
       @JsonProperty("teamName") String teamName,
       @JsonProperty("contactEmail") String contactEmail,
@@ -59,7 +60,7 @@ public class BasicRoadModel {
       @JsonProperty("authorisation") Authorisation authorisation,
       @JsonProperty("metadata") Map<String, String> metadata) {
     this.name = RoadNameValidator.validateRoadName(name);
-    this.type = type == null ? RoadType.NORMAL : type;
+    this.type = type == null ? RoadType.NORMAL : RoadTypeValidator.validateRoadType(type);
     this.description = description;
     this.teamName = teamName;
     this.contactEmail = contactEmail;

@@ -147,8 +147,9 @@ public class PaverServiceImplTest {
     hive.setEnabled(true);
     hive.setLandingInterval(HiveDestination.DEFAULT_LANDING_INTERVAL);
     road.getAuthorisation().getOnramp().setCidrBlocks(singletonList("0.0.0.0/0"));
-    BasicRoadModel model = new BasicRoadModel(road.getName(), road.getType(), road.getDescription(), road.getTeamName(),
-        road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), road.getAuthorisation(), road.getMetadata());
+    BasicRoadModel model = new BasicRoadModel(road.getName(), road.getType().name(),
+        road.getDescription(), road.getTeamName(), road.getContactEmail(), road.isEnabled(),
+        road.getPartitionPath(), road.getAuthorisation(), road.getMetadata());
     underTest.createRoad(model);
     ArgumentCaptor<Road> captor = ArgumentCaptor.forClass(Road.class);
     verify(roadAdminClient).createRoad(captor.capture());
@@ -167,8 +168,9 @@ public class PaverServiceImplTest {
     road.getAuthorisation().getOnramp().setAuthorities(emptyList());
     road.getAuthorisation().getOfframp().setAuthorities(emptyMap());
 
-    BasicRoadModel model = new BasicRoadModel(road.getName(), road.getType(), road.getDescription(), road.getTeamName(),
-        road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), null, road.getMetadata());
+    BasicRoadModel model = new BasicRoadModel(road.getName(), road.getType().name(),
+        road.getDescription(), road.getTeamName(), road.getContactEmail(), road.isEnabled(),
+        road.getPartitionPath(), null, road.getMetadata());
     underTest.createRoad(model);
     ArgumentCaptor<Road> captor = ArgumentCaptor.forClass(Road.class);
     verify(roadAdminClient).createRoad(captor.capture());
@@ -179,8 +181,9 @@ public class PaverServiceImplTest {
 
   @Test
   public void createRoadHiveDestinationDisabled() throws Exception {
-    BasicRoadModel model = new BasicRoadModel(road.getName(), road.getType(), road.getDescription(), road.getTeamName(),
-        road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), null, road.getMetadata());
+    BasicRoadModel model = new BasicRoadModel(road.getName(), road.getType().name(),
+        road.getDescription(), road.getTeamName(), road.getContactEmail(), road.isEnabled(),
+        road.getPartitionPath(), null, road.getMetadata());
     underTest = new PaverServiceImpl(roadAdminClient, schemaStoreClient, cidrBlockValidator, mappings,
         notificationHandler);
     underTest.createRoad(model);

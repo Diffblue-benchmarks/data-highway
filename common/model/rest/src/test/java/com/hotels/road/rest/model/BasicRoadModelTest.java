@@ -16,33 +16,36 @@
 package com.hotels.road.rest.model;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 
 import com.hotels.road.rest.model.validator.InvalidRoadNameException;
+import com.hotels.road.rest.model.validator.InvalidRoadTypeException;
 
 public class BasicRoadModelTest {
   ObjectMapper mapper = new ObjectMapper();
 
   @Test(expected = InvalidRoadNameException.class)
   public void disallowsRoadNamesStartingWithUnderscore() {
-    new BasicRoadModel("_road", RoadType.NORMAL, null, null, null, true, null, null, null);
+    new BasicRoadModel("_road", RoadType.NORMAL.name(), null, null, null, true, null, null, null);
   }
 
   @Test(expected = InvalidRoadNameException.class)
   public void disallowsRoadNamesStartingWithADigit() {
-    new BasicRoadModel("2road", RoadType.COMPACT, null, null, null, true, null, null, null);
+    new BasicRoadModel("2road", RoadType.COMPACT.name(), null, null, null, true, null, null, null);
+  }
+
+  @Test(expected = InvalidRoadTypeException.class)
+  public void disallowsIncorrectRoadTypes() {
+    new BasicRoadModel("road", "", null, null, null, true, null, null, null);
   }
 
   @Test
@@ -61,41 +64,43 @@ public class BasicRoadModelTest {
     assertNull(derialisedBasicRoadModel.metadata);
   }
 
-  @Test(expected = InvalidFormatException.class)
-  public void incorrectRoadType() throws Exception {
-    String compactedBasicRoadModelString = getSerialisedBasicRoadModel("my_road", "", null,
-        null, null, null, null, null, null);
+  @Test(expected = InvalidDefinitionException.class)
+  public void incorrectRoadName() throws Exception {
+    String basicRoadModelString = getSerialisedBasicRoadModel("_road", RoadType.NORMAL.name(),
+        null, null, null, null, null,
+        null, null);
 
-    mapper.readValue(compactedBasicRoadModelString, BasicRoadModel.class);
+    mapper.readValue(basicRoadModelString, BasicRoadModel.class);
+  }
+
+  @Test(expected = InvalidDefinitionException.class)
+  public void incorrectRoadType() throws Exception {
+    String basicRoadModelString = getSerialisedBasicRoadModel("my_road", "",
+        null, null, null, null, null,
+        null, null);
+
+    mapper.readValue(basicRoadModelString, BasicRoadModel.class);
   }
 
   @Test
-  public void upperCaseRoadType() throws Exception {
-    List<String> roadTypes = Arrays.asList(RoadType.values()).stream().map(Enum::name).collect(Collectors.toList());
-
-    for (String roadType : roadTypes) {
-
-      String jsonLowerType = getSerialisedBasicRoadModel("my_road", roadType.toUpperCase(),
-          null, null, null, null, null, null,
-          null);
-      try{
-        mapper.readValue(jsonLowerType, BasicRoadModel.class);
-      } catch (Exception e) {
-        fail(e.getMessage());
-      }
-
-      String jsonUpperType = getSerialisedBasicRoadModel("my_road", roadType.toLowerCase(),
-          null, null, null, null, null, null,
-          null);
-      try{
-        mapper.readValue(jsonUpperType, BasicRoadModel.class);
-        fail("No exception raised on lower case de-serialisation of RoadType enum");
-      } catch (Exception e) {
-        assertThat(e.getMessage(), startsWith("Cannot deserialize value of type "
-            + "`com.hotels.road.rest.model.RoadType` from String \"" + roadType.toLowerCase()
-            + "\": value not one of declared Enum instance names: [COMPACT, NORMAL]"));
-      }
-    }
+  public void anyCaseRoadType() {
+    Arrays.asList(RoadType.values()).stream()
+        .map(Enum::name)
+        .flatMap(roadType ->
+            Arrays.asList(
+                roadType.toUpperCase(),
+                roadType.toLowerCase()
+            ).stream())
+        .forEach(roadType -> {
+          String jsonString = getSerialisedBasicRoadModel("my_road", roadType,
+              null, null, null, null, null, null,
+              null);
+          try{
+            mapper.readValue(jsonString, BasicRoadModel.class);
+          } catch (Exception e) {
+            fail(e.getMessage());
+          }
+        });
   }
 
   private String getSerialisedBasicRoadModel(

@@ -106,8 +106,9 @@ public class SchemaControllerTest {
 
   @Before
   public void setup() throws Exception {
-    road = new RoadModel("road1", RoadType.NORMAL, "my road description", "my team", "a@b.c", true, null, null,
-        of("foo", "bar"), true, Road.DEFAULT_COMPATIBILITY_MODE, emptyMap());
+    road = new RoadModel("road1", RoadType.NORMAL.name(),
+        "my road description", "my team", "a@b.c", true, null,
+        null, of("foo", "bar"), true, Road.DEFAULT_COMPATIBILITY_MODE, emptyMap());
 
     objectMapper.registerModule(new SchemaSerializationModule());
 

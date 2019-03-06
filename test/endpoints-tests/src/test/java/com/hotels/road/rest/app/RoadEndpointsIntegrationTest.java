@@ -212,7 +212,8 @@ public class RoadEndpointsIntegrationTest {
   public void createRoadAndSchemas() throws Exception {
     // create Road
     String roadName = "a1";
-    BasicRoadModel basicRoadModel = new BasicRoadModel(roadName, RoadType.NORMAL, "a1 road", "a1 team", "a1@example.org", true, "", null,
+    BasicRoadModel basicRoadModel = new BasicRoadModel(roadName, RoadType.NORMAL.name(), "a1 road",
+        "a1 team", "a1@example.org", true, "", null,
         Maps.newHashMap());
     ResponseEntity<StandardResponse> createRoadResult = rest.exchange(post(uri("/paver/v1/roads"))
         .header(AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("user:pass".getBytes(UTF_8)))

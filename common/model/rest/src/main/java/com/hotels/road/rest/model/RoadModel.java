@@ -37,7 +37,7 @@ public class RoadModel extends BasicRoadModel {
   @JsonCreator
   public RoadModel(
       @JsonProperty("name") String name,
-      @JsonProperty("type") RoadType type,
+      @JsonProperty("type") String type,
       @JsonProperty("description") String description,
       @JsonProperty("teamName") String teamName,
       @JsonProperty("contactEmail") String contactEmail,
@@ -48,7 +48,8 @@ public class RoadModel extends BasicRoadModel {
       @JsonProperty("roadIntact") boolean roadIntact,
       @JsonProperty("compatibilityMode") String compatibilityMode,
       @JsonProperty("agentMessages") Map<String, String> agentMessages) {
-    super(name, type, description, teamName, contactEmail, enabled, partitionPath, authorisation, metadata);
+    super(name, type.toUpperCase(),
+        description, teamName, contactEmail, enabled, partitionPath, authorisation, metadata);
     this.roadIntact = roadIntact;
     this.compatibilityMode = compatibilityMode;
     this.agentMessages = agentMessages;

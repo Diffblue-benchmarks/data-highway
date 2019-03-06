@@ -84,8 +84,9 @@ public class RoadControllerTest {
 
   @Before
   public void before() {
-    road = new RoadModel(NAME, RoadType.NORMAL, "my road description", "my team", "a@b.c", true, null, null,
-        of("foo", "bar"), true, Road.DEFAULT_COMPATIBILITY_MODE, null);
+    road = new RoadModel(NAME, RoadType.NORMAL.name(), "my road description", "my team",
+        "a@b.c", true, null, null, of("foo", "bar"),
+        true, Road.DEFAULT_COMPATIBILITY_MODE, null);
 
     mockMvc = standaloneSetup(roadController)
         .setControllerAdvice(paverExceptionHandler, globalExceptionHandler)
@@ -174,7 +175,7 @@ public class RoadControllerTest {
         .andExpect(content().json("{\"success\":true}"));
 
     verify(paverService).createRoad(
-        new BasicRoadModel(road.getName(), road.getType(), road.getDescription(), road.getTeamName(),
+        new BasicRoadModel(road.getName(), road.getType().name(), road.getDescription(), road.getTeamName(),
             road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), road.getAuthorisation(),
             road.getMetadata()));
   }

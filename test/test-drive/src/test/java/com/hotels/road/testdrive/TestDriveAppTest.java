@@ -177,7 +177,7 @@ public class TestDriveAppTest {
     offrampModel.setAuthorities(singletonMap("*", singleton(PUBLIC)));
     authorisation.setOfframp(offrampModel);
     Map<String, String> metadata = emptyMap();
-    return new BasicRoadModel(ROAD_NAME, type, description, teamName, contactEmail, enabled, partitionPath,
+    return new BasicRoadModel(ROAD_NAME, type.name(), description, teamName, contactEmail, enabled, partitionPath,
         authorisation, metadata);
   }
 
