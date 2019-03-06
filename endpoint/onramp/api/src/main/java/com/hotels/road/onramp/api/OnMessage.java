@@ -15,11 +15,15 @@
  */
 package com.hotels.road.onramp.api;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import com.hotels.road.onramp.api.json.OnMessageDeserializer;
 
 import lombok.Value;
 
 @Value
+@JsonDeserialize(using = OnMessageDeserializer.class)
 public class OnMessage {
 
   String key;
