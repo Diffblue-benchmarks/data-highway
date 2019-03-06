@@ -174,8 +174,9 @@ public class RoadControllerTest {
         .andExpect(content().json("{\"success\":true}"));
 
     verify(paverService).createRoad(
-        new BasicRoadModel(road.getName(), road.getDescription(), road.getTeamName(), road.getContactEmail(),
-            road.isEnabled(), road.getPartitionPath(), road.getAuthorisation(), road.getMetadata()));
+        new BasicRoadModel(road.getName(), road.getType(), road.getDescription(), road.getTeamName(),
+            road.getContactEmail(), road.isEnabled(), road.getPartitionPath(), road.getAuthorisation(),
+            road.getMetadata()));
   }
 
   @Test

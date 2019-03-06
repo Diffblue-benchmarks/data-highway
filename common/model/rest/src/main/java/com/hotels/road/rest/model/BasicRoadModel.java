@@ -30,6 +30,8 @@ import com.hotels.road.rest.model.validator.RoadNameValidator;
 public class BasicRoadModel {
   @ApiModelProperty(name = "name", value = "Road name", required = true)
   protected final String name;
+  @ApiModelProperty(name = "type", value = "Road type", required = false)
+  protected final RoadType type;
   @ApiModelProperty(name = "description", value = "A concise description of type and source of data available on the road.", required = true)
   protected final String description;
   @ApiModelProperty(name = "teamName", value = "Team that pushes data onto this road.", required = true)
@@ -48,6 +50,7 @@ public class BasicRoadModel {
   @JsonCreator
   public BasicRoadModel(
       @JsonProperty(value = "name", required = true) String name,
+      @JsonProperty("type") RoadType type,
       @JsonProperty("description") String description,
       @JsonProperty("teamName") String teamName,
       @JsonProperty("contactEmail") String contactEmail,
@@ -56,6 +59,7 @@ public class BasicRoadModel {
       @JsonProperty("authorisation") Authorisation authorisation,
       @JsonProperty("metadata") Map<String, String> metadata) {
     this.name = RoadNameValidator.validateRoadName(name);
+    this.type = type == null ? RoadType.NORMAL : type;
     this.description = description;
     this.teamName = teamName;
     this.contactEmail = contactEmail;

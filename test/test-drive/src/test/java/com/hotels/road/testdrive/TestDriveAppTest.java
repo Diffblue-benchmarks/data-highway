@@ -62,6 +62,7 @@ import com.hotels.road.rest.model.Authorisation;
 import com.hotels.road.rest.model.Authorisation.Offramp;
 import com.hotels.road.rest.model.Authorisation.Onramp;
 import com.hotels.road.rest.model.BasicRoadModel;
+import com.hotels.road.rest.model.RoadType;
 import com.hotels.road.rest.model.StandardResponse;
 import com.hotels.road.tls.TLSConfig;
 
@@ -161,6 +162,7 @@ public class TestDriveAppTest {
   }
 
   private BasicRoadModel basicRoadModel() {
+    RoadType type = RoadType.NORMAL;
     String description = "Test Road";
     String teamName = "ROAD";
     String contactEmail = "road@hotels.com";
@@ -175,8 +177,8 @@ public class TestDriveAppTest {
     offrampModel.setAuthorities(singletonMap("*", singleton(PUBLIC)));
     authorisation.setOfframp(offrampModel);
     Map<String, String> metadata = emptyMap();
-    return new BasicRoadModel(ROAD_NAME, description, teamName, contactEmail, enabled, partitionPath, authorisation,
-        metadata);
+    return new BasicRoadModel(ROAD_NAME, type, description, teamName, contactEmail, enabled, partitionPath,
+        authorisation, metadata);
   }
 
   private Schema schema() {
