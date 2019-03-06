@@ -15,19 +15,19 @@
  */
 package com.hotels.road.rest.model.validator;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 import com.hotels.road.rest.model.RoadType;
 
 public class RoadTypeValidator implements ModelValidator<String> {
-  private static final List<String> ROAD_TYPES =
+  private static final Set<String> ROAD_TYPES =
       Arrays.asList(RoadType.values()).stream()
           .map(Enum::name)
           .flatMap(type -> Arrays.asList(type.toLowerCase(), type.toUpperCase()).stream())
-          .collect(toList());
+          .collect(toSet());
   private static final RoadTypeValidator VALIDATOR = new RoadTypeValidator();
   private static final String ERROR_MESSAGE = "Road type should be one of the following ["
       + String.join(",", ROAD_TYPES) + "]";
