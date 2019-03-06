@@ -83,24 +83,16 @@ public class BasicRoadModelTest {
   }
 
   @Test
-  public void anyCaseRoadType() {
-    Arrays.asList(RoadType.values()).stream()
-        .map(Enum::name)
-        .flatMap(roadType ->
-            Arrays.asList(
-                roadType.toUpperCase(),
-                roadType.toLowerCase()
-            ).stream())
-        .forEach(roadType -> {
-          String jsonString = getSerialisedBasicRoadModel("my_road", roadType,
-              null, null, null, null, null, null,
-              null);
-          try{
-            mapper.readValue(jsonString, BasicRoadModel.class);
-          } catch (Exception e) {
-            fail(e.getMessage());
-          }
-        });
+  public void anyCaseRoadType() throws Exception {
+    for (RoadType roadType : RoadType.values()) {
+      try{
+        mapper.readValue(getSerialisedBasicRoadModel("my_road", roadType.name().toUpperCase(),null, null, null, null, null, null,null), BasicRoadModel.class);
+        mapper.readValue(getSerialisedBasicRoadModel("my_road", roadType.name().toLowerCase(),null, null, null, null, null, null,null), BasicRoadModel.class);
+      } catch (Exception e) {
+        fail(e.getMessage());
+      }
+    }
+    mapper.readValue(getSerialisedBasicRoadModel("my_road", "NoRmAl",null, null, null, null, null, null,null), BasicRoadModel.class);
   }
 
   private String getSerialisedBasicRoadModel(
