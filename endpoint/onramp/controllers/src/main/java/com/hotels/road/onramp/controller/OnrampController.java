@@ -36,9 +36,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.Futures;
 
@@ -47,8 +44,8 @@ import com.hotels.road.exception.InvalidEventException;
 import com.hotels.road.exception.RoadUnavailableException;
 import com.hotels.road.exception.ServiceException;
 import com.hotels.road.exception.UnknownRoadException;
-import com.hotels.road.onramp.api.OnMessageWrapper;
 import com.hotels.road.onramp.api.OnMessage;
+import com.hotels.road.onramp.api.OnMessageWrapper;
 import com.hotels.road.onramp.api.Onramp;
 import com.hotels.road.onramp.api.OnrampService;
 import com.hotels.road.rest.model.StandardResponse;
@@ -72,8 +69,6 @@ public class OnrampController {
   private final OnrampService service;
   private final MeterRegistry registry;
   private final Clock clock;
-  private final ObjectMapper v2Mapper = new ObjectMapper()
-      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
 
   @ApiOperation(value = "Sends a given array of messages to a road")
   @ApiResponses({
@@ -85,7 +80,7 @@ public class OnrampController {
   @PostMapping(path = "/v1/roads/{roadName}/messages")
   public List<StandardResponse> produce(@PathVariable String roadName, @RequestBody Iterable<ObjectNode> messages)
       throws UnknownRoadException, InterruptedException {
-    return sendMessages(
+    return sendV1Messages(
         roadName,
         StreamSupport
             .stream(messages.spliterator(), false)
@@ -100,13 +95,10 @@ public class OnrampController {
       @ApiResponse(code = 422, message = "Road not enabled.", response = StandardResponse.class) })
   @PreAuthorize("@onrampAuthorisation.isAuthorised(authentication,#roadName)")
   @PostMapping(path = "/v2/roads/{roadName}/messages")
-  public List<StandardResponse> produceV2(@PathVariable String roadName, @RequestBody Iterable<ObjectNode> messages)
+  public List<StandardResponse> produceV2(@PathVariable String roadName,
+                                          @RequestBody Iterable<OnMessage> messages)
       throws UnknownRoadException, InterruptedException {
-    return sendMessages(
-        roadName,
-        StreamSupport
-            .stream(messages.spliterator(), false)
-            .map(this::mapToOnmessageV2));
+    return sendV2Messages(roadName, messages);
   }
 
   private Onramp getOnramp(String roadName) throws UnknownRoadException {
@@ -117,12 +109,23 @@ public class OnrampController {
     return onramp;
   }
 
-  private List<StandardResponse> sendMessages(String roadName, Stream<OnMessageWrapper> messages)
+  private List<StandardResponse> sendV1Messages(String roadName, Stream<OnMessageWrapper> messages)
       throws ServiceException, UnknownRoadException {
     Onramp onramp = getOnramp(roadName);
     Instant time = clock.instant();
     return messages
         .map(dm -> filterUndeserialised(onramp, time, dm))
+        .map(this::translateFuture)
+        .collect(Collectors.toList());
+  }
+
+  private List<StandardResponse> sendV2Messages(String roadName, Iterable<OnMessage> messages)
+      throws ServiceException, UnknownRoadException {
+    Onramp onramp = getOnramp(roadName);
+    Instant time = clock.instant();
+
+    return StreamSupport.stream(messages.spliterator(), false)
+        .map(m -> onramp.sendOnMessage(m, time))
         .map(this::translateFuture)
         .collect(Collectors.toList());
   }
@@ -142,8 +145,7 @@ public class OnrampController {
       Throwable cause = e.getCause();
       if (cause instanceof DeserialisationException) {
         log.warn("Deserialisation problem", e);
-      }
-      else if (!(cause instanceof InvalidEventException)) {
+      } else if (!(cause instanceof InvalidEventException)) {
         log.warn("Problem sending event", e);
       }
       return StandardResponse.failureResponse(cause.getMessage());
@@ -157,25 +159,6 @@ public class OnrampController {
         true,
         "",
         new OnMessage(null, obj));
-  }
-
-
-  private OnMessageWrapper mapToOnmessageV2(ObjectNode obj) throws IllegalArgumentException {
-    try {
-      return new OnMessageWrapper(
-          true,
-          "",
-          v2Mapper.treeToValue(obj, OnMessage.class)
-      );
-
-    } catch (JsonProcessingException e) {
-      log.warn("Failed to map ObjectNode to OnMessage");
-      return new OnMessageWrapper(
-          false,
-          e.getMessage(),
-          null
-      );
-    }
   }
 
   @ExceptionHandler

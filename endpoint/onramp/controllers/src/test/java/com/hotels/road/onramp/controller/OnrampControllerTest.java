@@ -51,10 +51,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultHandler;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import lombok.extern.slf4j.Slf4j;
-
 import com.hotels.road.exception.InvalidEventException;
 import com.hotels.road.exception.ServiceException;
 import com.hotels.road.model.core.SchemaVersion;
@@ -63,6 +59,10 @@ import com.hotels.road.onramp.api.Onramp;
 import com.hotels.road.onramp.api.OnrampService;
 import com.hotels.road.rest.controller.common.GlobalExceptionHandler;
 import com.hotels.road.security.CidrBlockAuthorisation;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
@@ -75,11 +75,13 @@ public class OnrampControllerTest {
   public static class TestConfiguration {
     public static final MeterRegistry registry = new SimpleMeterRegistry();
 
-    public @Bean MeterRegistry testMeterRegistry() {
+    public @Bean
+    MeterRegistry testMeterRegistry() {
       return registry;
     }
 
-    public @Bean Clock clock() {
+    public @Bean
+    Clock clock() {
       return Clock.systemDefaultZone();
     }
   }
@@ -174,11 +176,11 @@ public class OnrampControllerTest {
     mockMvc
         .perform(post(PRESENT_ROAD_URI).content("[{\"valid\":true}]").contentType(APPLICATION_JSON_UTF8))
         .andExpect(status().isOk()).andDo(new ResultHandler() {
-          @Override
-          public void handle(MvcResult result) throws Exception {
-            log.info("response = {}", result.getResponse().getContentAsString());
-          }
-        })
+      @Override
+      public void handle(MvcResult result) throws Exception {
+        log.info("response = {}", result.getResponse().getContentAsString());
+      }
+    })
         .andExpect(jsonPath("$[0].message", is("Message accepted.")))
         .andExpect(jsonPath("$[0].success", is(true)));
   }
@@ -219,9 +221,7 @@ public class OnrampControllerTest {
                         + "  }\n"
                         + "}]")
                 .contentType(APPLICATION_JSON_UTF8))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].message", startsWith("Deserialisation failed. Unrecognized field \"partition\"")))
-        .andExpect(jsonPath("$[0].success", is(false)));
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -236,13 +236,7 @@ public class OnrampControllerTest {
                         + "{ \"key\": \"effort\", \"value\": { \"valid\": false }, \"partition\": 1 },"
                         + "{ \"key\": \"effortless\", \"value\": { \"valid\": true } }]")
                 .contentType(APPLICATION_JSON_UTF8))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].message", is("Message accepted.")))
-        .andExpect(jsonPath("$[0].success", is(true)))
-        .andExpect(jsonPath("$[1].message", startsWith("Deserialisation failed. Unrecognized field \"partition\"")))
-        .andExpect(jsonPath("$[1].success", is(false)))
-        .andExpect(jsonPath("$[2].message", is("Message accepted.")))
-        .andExpect(jsonPath("$[2].success", is(true)));
+        .andExpect(status().isBadRequest());
   }
 
   @Test
