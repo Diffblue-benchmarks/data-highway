@@ -21,7 +21,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.hotels.road.rest.model.validator.InvalidRoadTypeException;
 import com.hotels.road.rest.model.validator.RoadNameValidator;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -61,7 +60,7 @@ public class BasicRoadModel {
       @JsonProperty("authorisation") Authorisation authorisation,
       @JsonProperty("metadata") Map<String, String> metadata) {
     this.name = RoadNameValidator.validateRoadName(name);
-    this.type = convertRoadType(type);
+    this.type = RoadType.fromString(type);
     this.description = description;
     this.teamName = teamName;
     this.contactEmail = contactEmail;
@@ -69,13 +68,5 @@ public class BasicRoadModel {
     this.partitionPath = partitionPath;
     this.authorisation = authorisation;
     this.metadata = (metadata == null) ? null : new HashMap<>(metadata);
-  }
-
-  private RoadType convertRoadType(String type) {
-    try {
-      return type == null ? RoadType.NORMAL : RoadType.valueOf(type.toUpperCase());
-    } catch (IllegalArgumentException e) {
-      throw new InvalidRoadTypeException(e.getMessage());
-    }
   }
 }

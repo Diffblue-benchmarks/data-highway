@@ -15,7 +15,17 @@
  */
 package com.hotels.road.rest.model;
 
+import com.hotels.road.rest.model.validator.InvalidRoadTypeException;
+
 public enum RoadType {
   NORMAL,
-  COMPACT
+  COMPACT;
+
+  public static RoadType fromString(String type) {
+    try {
+      return type == null ? RoadType.NORMAL : RoadType.valueOf(type.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new InvalidRoadTypeException(e.getMessage());
+    }
+  }
 }
