@@ -15,16 +15,32 @@
  */
 package com.hotels.road.trafficcontrol.model;
 
-import lombok.Value;
-import lombok.experimental.Wither;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.hotels.road.rest.model.RoadType;
 
+import lombok.Value;
+import lombok.experimental.Wither;
+
 @Value
 public class KafkaRoad {
+
   String name;
   @Wither
   String topicName;
   RoadType type;
   TrafficControlStatus status;
+
+  @JsonCreator
+  public KafkaRoad(
+      @JsonProperty("name") String name,
+      @JsonProperty("topicName") String topicName,
+      @JsonProperty("type") RoadType type,
+      @JsonProperty("status") TrafficControlStatus status) {
+    this.name = name;
+    this.topicName = topicName;
+    this.type = type == null ? RoadType.NORMAL : type;
+    this.status = status;
+  }
 }
