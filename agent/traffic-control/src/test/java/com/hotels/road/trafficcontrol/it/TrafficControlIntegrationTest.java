@@ -44,11 +44,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import kafka.admin.AdminUtils;
-import kafka.server.ConfigType;
-import kafka.utils.ZkUtils;
-import lombok.extern.slf4j.Slf4j;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +64,11 @@ import com.hotels.road.trafficcontrol.TrafficControl;
 import com.hotels.road.trafficcontrol.TrafficControlApp;
 import com.hotels.road.trafficcontrol.model.KafkaRoad;
 import com.hotels.road.trafficcontrol.model.TrafficControlStatus;
+
+import kafka.admin.AdminUtils;
+import kafka.server.ConfigType;
+import kafka.utils.ZkUtils;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -129,6 +129,7 @@ public class TrafficControlIntegrationTest {
     ObjectNode model = mapper.createObjectNode();
     model.set("name", TextNode.valueOf(TOPIC_NAME_PREFIX + "_1"));
     model.set("topicName", TextNode.valueOf(TOPIC_NAME_PREFIX + "_1"));
+    model.set("type", TextNode.valueOf("NORMAL"));
     kafkaStore.put(TEST_ROAD_NAME_PREFIX + "_1", model);
 
     for (String messageString : fetchMessages(createPatchTopicConsumer(), 1)) {

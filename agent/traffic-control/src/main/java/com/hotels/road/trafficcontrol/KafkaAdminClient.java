@@ -123,12 +123,11 @@ public class KafkaAdminClient {
   }
 
   public int getPartitions(RoadType type) {
-    switch (type) {
-    case COMPACT:
-      return compactPartitions;
-    case NORMAL:
+    if (type == null || type == RoadType.NORMAL) {
       return normalPartitions;
-    default:
+    } else if (type == RoadType.COMPACT) {
+      return compactPartitions;
+    } else {
       throw new IllegalArgumentException(String.format("Unknown road type \"%s\"", type.name()));
     }
   }

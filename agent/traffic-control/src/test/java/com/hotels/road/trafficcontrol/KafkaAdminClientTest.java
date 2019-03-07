@@ -60,4 +60,9 @@ public class KafkaAdminClientTest {
       assertThat(underTest.getPartitions(type), is(type2Partitions.get(type)));
     }
   }
+
+  @Test
+  public void testNullRoadType() {
+    assertThat(underTest.getPartitions(null), is(type2Partitions.get(RoadType.NORMAL)));
+  }
 }
