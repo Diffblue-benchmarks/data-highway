@@ -18,17 +18,18 @@ package com.hotels.road.rest.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.hotels.road.rest.model.validator.InvalidRoadTypeException;
 import com.hotels.road.rest.model.validator.RoadNameValidator;
 
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 @Data
 public class BasicRoadModel {
+
   @ApiModelProperty(name = "name", value = "Road name", required = true)
   protected final String name;
   @ApiModelProperty(name = "type", value = "Road type", required = false)

@@ -20,8 +20,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
-
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +29,7 @@ import com.hotels.road.rest.model.validator.InvalidRoadNameException;
 import com.hotels.road.rest.model.validator.InvalidRoadTypeException;
 
 public class BasicRoadModelTest {
+
   ObjectMapper mapper = new ObjectMapper();
 
   @Test(expected = InvalidRoadNameException.class)
@@ -85,14 +84,19 @@ public class BasicRoadModelTest {
   @Test
   public void anyCaseRoadType() throws Exception {
     for (RoadType roadType : RoadType.values()) {
-      try{
-        mapper.readValue(getSerialisedBasicRoadModel("my_road", roadType.name().toUpperCase(),null, null, null, null, null, null,null), BasicRoadModel.class);
-        mapper.readValue(getSerialisedBasicRoadModel("my_road", roadType.name().toLowerCase(),null, null, null, null, null, null,null), BasicRoadModel.class);
+      try {
+        mapper.readValue(
+            getSerialisedBasicRoadModel("my_road", roadType.name().toUpperCase(),
+                null, null, null, null, null, null, null), BasicRoadModel.class);
+        mapper.readValue(
+            getSerialisedBasicRoadModel("my_road", roadType.name().toLowerCase(),
+                null, null, null, null, null, null, null), BasicRoadModel.class);
       } catch (Exception e) {
         fail(e.getMessage());
       }
     }
-    mapper.readValue(getSerialisedBasicRoadModel("my_road", "NoRmAl",null, null, null, null, null, null,null), BasicRoadModel.class);
+    mapper.readValue(getSerialisedBasicRoadModel("my_road", "NoRmAl",
+        null, null, null, null, null, null, null), BasicRoadModel.class);
   }
 
   private String getSerialisedBasicRoadModel(

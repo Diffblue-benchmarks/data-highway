@@ -17,16 +17,17 @@ package com.hotels.road.rest.model;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class RoadModel extends BasicRoadModel {
+
   @ApiModelProperty(name = "roadIntact", value = "Indicates if the road is ready to accept messages.", required = false)
   private final boolean roadIntact;
   @ApiModelProperty(name = "compatibilityMode", value = "Specifies which compatibility mode is used on the road", required = false)
