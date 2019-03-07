@@ -24,10 +24,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import kafka.utils.ZkUtils;
-
 import com.hotels.road.agents.trafficcop.TrafficCopConfiguration;
 import com.hotels.road.boot.DataHighwayApplication;
+
+import kafka.utils.ZkUtils;
 
 @SpringBootApplication
 @EnableScheduling
@@ -45,11 +45,14 @@ public class TrafficControlApp {
   @Bean
   public KafkaAdminClient kafkaAdminClient(
       ZkUtils zkUtils,
-      @Value("${kafka.default.partitions:6}") int defaultPartitions,
+      @Value("${kafka.default.normal.partitions:6}") int defaultNormalPartitions,
+      @Value("${kafka.default.compact.partitions:120}") int defaultCompactPartitions,
       @Value("${kafka.default.replicationFactor:3}") int defaultFeplicationFactor,
       @Value("${kafka.default.topicConfig:#{null}}") Properties defaultTopicConfig) {
     defaultTopicConfig = Optional.ofNullable(defaultTopicConfig).orElse(new Properties());
-    return new KafkaAdminClient(zkUtils, defaultPartitions, defaultFeplicationFactor, defaultTopicConfig);
+    return new KafkaAdminClient(zkUtils,
+        defaultNormalPartitions, defaultCompactPartitions,
+        defaultFeplicationFactor, defaultTopicConfig);
   }
 
   public static void main(String[] args) {

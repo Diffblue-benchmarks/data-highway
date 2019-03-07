@@ -22,6 +22,9 @@ import java.util.Properties;
 
 import org.apache.kafka.common.config.TopicConfig;
 
+import com.hotels.road.rest.model.RoadType;
+import com.hotels.road.trafficcontrol.model.KafkaRoad;
+
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
 import kafka.common.KafkaException;
@@ -30,9 +33,6 @@ import kafka.server.ConfigType;
 import kafka.utils.ZkUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import com.hotels.road.rest.model.RoadType;
-import com.hotels.road.trafficcontrol.model.KafkaRoad;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,7 +48,8 @@ public class KafkaAdminClient {
   private static final RackAwareMode DEFAULT_RACK_AWARE_MODE = AdminUtils.createTopic$default$6();
 
   private final ZkUtils zkUtils;
-  private final int partitions;
+  private final int normalPartitions;
+  private final int compactPartitions;
   private final int replicationFactor;
   private final Properties defaultTopicConfig;
 
@@ -57,12 +58,15 @@ public class KafkaAdminClient {
     topicConfig.setProperty(LEADER_THROTTLED_REPLICAS, WILDCARD);
     topicConfig.setProperty(FOLLOWER_THROTTLED_REPLICAS, WILDCARD);
     RoadType roadType = ofNullable(road.getType()).orElse(RoadType.NORMAL);
+    int partitions;
     switch (roadType) {
     case NORMAL:
       topicConfig.setProperty(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE);
+      partitions = normalPartitions;
       break;
     case COMPACT:
       topicConfig.setProperty(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_COMPACT);
+      partitions = compactPartitions;
       break;
     default:
       throw new KafkaException("Unhandled road type \"" + road.getType().name() + "\"");
@@ -118,8 +122,15 @@ public class KafkaAdminClient {
     return new KafkaTopicDetails(type, numPartitions, numReplicas);
   }
 
-  public int getPartitions() {
-    return partitions;
+  public int getPartitions(RoadType type) {
+    switch (type) {
+    case COMPACT:
+      return compactPartitions;
+    case NORMAL:
+      return normalPartitions;
+    default:
+      throw new IllegalArgumentException(String.format("Unknown road type \"%s\"", type.name()));
+    }
   }
 
   public int getReplicationFactor() {

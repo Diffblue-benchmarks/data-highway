@@ -93,7 +93,7 @@ public class PaverServiceImpl implements PaverService {
   public void createRoad(BasicRoadModel basicModel) {
     Road road = new Road();
     road.setName(basicModel.getName());
-    road.setType(RoadType.NORMAL);
+    road.setType(basicModel.getType());
     road.setDescription(basicModel.getDescription());
     road.setTeamName(basicModel.getTeamName());
     road.setContactEmail(basicModel.getContactEmail());

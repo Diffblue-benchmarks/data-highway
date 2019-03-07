@@ -29,13 +29,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.extern.slf4j.Slf4j;
-
 import com.hotels.road.agents.trafficcop.spi.Agent;
 import com.hotels.road.rest.model.RoadType;
 import com.hotels.road.tollbooth.client.api.PatchOperation;
 import com.hotels.road.trafficcontrol.model.KafkaRoad;
 import com.hotels.road.trafficcontrol.model.TrafficControlStatus;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -131,7 +131,7 @@ public class TrafficControl implements Agent<KafkaRoad> {
       } catch (TopicExistsException e) {
         // Ignore, topic is already created, send notifications again.
       }
-      return status(true, adminClient.getPartitions(), adminClient.getReplicationFactor(), "");
+      return status(true, adminClient.getPartitions(road.getType()), adminClient.getReplicationFactor(), "");
     } catch (KafkaException e) {
       log.warn("Problem creating Kafka topic for {}", road.getName(), e);
       return status(false, 0, 0, String.format(CREATE_EXCEPTION_FORMAT, e.toString()));

@@ -20,6 +20,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
@@ -53,7 +54,7 @@ public class TrafficControlTest {
 
   @Before
   public void setUp() {
-    when(kafkaAdminClient.getPartitions()).thenReturn(6);
+    when(kafkaAdminClient.getPartitions(any(RoadType.class))).thenReturn(6);
     when(kafkaAdminClient.getReplicationFactor()).thenReturn(1);
     trafficControl = new TrafficControl(kafkaAdminClient, "road.");
   }
