@@ -17,6 +17,9 @@ package com.hotels.road.offramp.utilities;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+
+import java.nio.BufferUnderflowException;
+
 import org.junit.Test;
 
 import com.hotels.road.offramp.api.Payload;
@@ -33,5 +36,15 @@ public class KafkaPayloadDeserializerTest {
     assertThat(payload.getFormatVersion(), is((byte) 0));
     assertThat(payload.getSchemaVersion(), is(1));
     assertThat(payload.getMessage(), is(new byte[] { 2, 3, 4, 5 }));
+  }
+
+  @Test(expected = BufferUnderflowException.class)
+  public void testZeroBytes() {
+    new PayloadDeserializer().deserialize("topic", new byte[0]);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testNull() {
+    new PayloadDeserializer().deserialize("topic", null);
   }
 }
