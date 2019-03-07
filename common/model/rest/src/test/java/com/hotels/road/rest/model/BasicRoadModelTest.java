@@ -33,12 +33,7 @@ public class BasicRoadModelTest {
   ObjectMapper mapper = new ObjectMapper();
 
   @Test(expected = InvalidRoadNameException.class)
-  public void disallowsRoadNamesStartingWithUnderscore() {
-    new BasicRoadModel("_road", RoadType.NORMAL.name(), null, null, null, true, null, null, null);
-  }
-
-  @Test(expected = InvalidRoadNameException.class)
-  public void disallowsRoadNamesStartingWithADigit() {
+  public void disallowsIncorrectRoadNames() {
     new BasicRoadModel("2road", RoadType.COMPACT.name(), null, null, null, true, null, null, null);
   }
 
