@@ -39,9 +39,8 @@ public class BrokerSerializer implements StreamSerializer<Broker> {
 
   @Override
   public Broker read(ObjectDataInput in) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    final byte[] src = in.readByteArray();
-    return mapper.readValue(src, Broker.class);
+    final byte[] b = in.readByteArray();
+    return objectMapper.readValue(b, Broker.class);
   }
 
   @Override
