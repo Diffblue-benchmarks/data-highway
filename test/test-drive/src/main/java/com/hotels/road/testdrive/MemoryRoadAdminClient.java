@@ -49,6 +49,7 @@ import lombok.RequiredArgsConstructor;
 class MemoryRoadAdminClient implements RoadAdminClient {
 
   private static final String ROAD_ALREADY_EXISTS = "Road %s already exists.";
+  private static final String DELETED_ROAD_ALREADY_EXISTS = "Road %s is currently being deleted. Please try again later.";
   private final Map<String, Road> store;
   private final ObjectMapper mapper;
 
@@ -70,6 +71,9 @@ class MemoryRoadAdminClient implements RoadAdminClient {
   @Override
   public void createRoad(Road road) throws AlreadyExistsException {
     getRoad(road.getName()).ifPresent(r -> {
+      if(r.isDeleted()) {
+        throw new AlreadyExistsException(String.format(DELETED_ROAD_ALREADY_EXISTS, r.getName()));
+      }
       throw new AlreadyExistsException(String.format(ROAD_ALREADY_EXISTS, r.getName()));
     });
     KafkaStatus status = new KafkaStatus();

@@ -19,6 +19,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import static com.hotels.road.tollbooth.client.api.PatchOperation.add;
+import static com.hotels.road.tollbooth.client.api.PatchOperation.remove;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,9 @@ public class TrafficControl implements Agent<KafkaRoad> {
 
   @Override
   public void deletedModel(String key, KafkaRoad oldModel) {
-    log.warn("I don't know what to do when a model is deleted!");
+    if(!oldModel.isDeleted()) {
+      log.warn("Model for Road {} was deleted but had its deleted flag disabled", oldModel.getName());
+    }
   }
 
   @Override
@@ -78,6 +81,11 @@ public class TrafficControl implements Agent<KafkaRoad> {
 
   private List<PatchOperation> handleModel(KafkaRoad road) {
     List<PatchOperation> result = new ArrayList<>();
+
+    if(isRoadDeleted(road)) {
+      result.add(remove(""));
+      return result;
+    }
 
     String topicName = road.getTopicName();
     if (topicName == null) {
@@ -99,6 +107,22 @@ public class TrafficControl implements Agent<KafkaRoad> {
     }
 
     return result;
+  }
+
+  private boolean isRoadDeleted(KafkaRoad road) {
+    if(road.isDeleted()) {
+      String topicName = road.getTopicName();
+      if (adminClient.topicExists(topicName)) {
+        try {
+          adminClient.deleteTopic(topicName);
+        } catch (Exception e) {
+          log.warn("Road deletion failed for topic {}", topicName);
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   private List<PatchOperation> checkModelType(KafkaRoad road) {

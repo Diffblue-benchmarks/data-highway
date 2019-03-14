@@ -31,16 +31,22 @@ public class KafkaRoad {
   String topicName;
   RoadType type;
   TrafficControlStatus status;
+  MessageStatus messageStatus;
+  boolean deleted;
 
   @JsonCreator
   public KafkaRoad(
       @JsonProperty("name") String name,
       @JsonProperty("topicName") String topicName,
       @JsonProperty("type") RoadType type,
-      @JsonProperty("status") TrafficControlStatus status) {
+      @JsonProperty("status") TrafficControlStatus status,
+      @JsonProperty("messageStatus") MessageStatus messageStatus,
+      @JsonProperty("deleted") boolean deleted) {
     this.name = name;
     this.topicName = topicName;
     this.type = type == null ? RoadType.NORMAL : type;
     this.status = status;
+    this.messageStatus = messageStatus;
+    this.deleted = deleted;
   }
 }

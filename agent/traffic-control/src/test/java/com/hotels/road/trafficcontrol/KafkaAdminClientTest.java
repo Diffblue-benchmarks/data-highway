@@ -18,6 +18,7 @@ package com.hotels.road.trafficcontrol;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import com.hotels.road.rest.model.RoadType;
+import com.hotels.road.trafficcontrol.function.MessageCountPerTopicFunction;
 
 import kafka.utils.ZkUtils;
 
@@ -37,6 +39,8 @@ public class KafkaAdminClientTest {
   private int replicationFactor;
   private @Mock ZkUtils zkUtils;
   private @Mock Properties defaultTopicConfig;
+  private @Mock MessageCountPerTopicFunction messageCountPerTopicFunction;
+  private @Mock Clock clock;
 
   private KafkaAdminClient underTest;
 
@@ -51,7 +55,10 @@ public class KafkaAdminClientTest {
 
     replicationFactor = 3;
     underTest = new KafkaAdminClient(
-        zkUtils, normalPartitions, compactPartitions, replicationFactor, defaultTopicConfig);
+        zkUtils,
+        normalPartitions, compactPartitions,
+        replicationFactor, defaultTopicConfig,
+        messageCountPerTopicFunction, clock);
   }
 
   @Test

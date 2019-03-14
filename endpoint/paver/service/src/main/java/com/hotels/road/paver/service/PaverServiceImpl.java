@@ -15,8 +15,11 @@
  */
 package com.hotels.road.paver.service;
 
+import static java.util.Collections.singletonList;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.hotels.road.exception.InvalidKeyPathException;
@@ -38,7 +42,9 @@ import com.hotels.road.exception.InvalidSchemaException;
 import com.hotels.road.exception.InvalidSchemaVersionException;
 import com.hotels.road.exception.ServiceException;
 import com.hotels.road.exception.UnknownRoadException;
+import com.hotels.road.model.core.Destination;
 import com.hotels.road.model.core.KafkaStatus;
+import com.hotels.road.model.core.MessageStatus;
 import com.hotels.road.model.core.Road;
 import com.hotels.road.model.core.SchemaVersion;
 import com.hotels.road.partition.KeyPathParser;
@@ -46,6 +52,7 @@ import com.hotels.road.partition.KeyPathValidator;
 import com.hotels.road.paver.api.RoadAdminClient;
 import com.hotels.road.paver.api.SchemaStoreClient;
 import com.hotels.road.paver.service.exception.NoSuchSchemaException;
+import com.hotels.road.paver.service.patchmapping.EnabledPatchMapping;
 import com.hotels.road.paver.service.patchmapping.PatchMapping;
 import com.hotels.road.rest.model.Authorisation;
 import com.hotels.road.rest.model.Authorisation.Offramp;
@@ -63,12 +70,12 @@ import com.hotels.road.tollbooth.client.api.PatchSet;
 
 @Component
 public class PaverServiceImpl implements PaverService {
-
   private final RoadAdminClient roadAdminClient;
   private final SchemaStoreClient schemaStoreClient;
   private final CidrBlockValidator cidrBlockBValidator;
   private final Map<String, PatchMapping> patchMappings;
   private final RoadSchemaNotificationHandler roadSchemaNotificationHandler;
+  private final Clock clock;
 
   @Autowired
   public PaverServiceImpl(
@@ -76,11 +83,13 @@ public class PaverServiceImpl implements PaverService {
       SchemaStoreClient schemaStoreClient,
       CidrBlockValidator cidrBlockBValidator,
       List<PatchMapping> mappings,
-      RoadSchemaNotificationHandler roadSchemaNotificationHandler) {
+      RoadSchemaNotificationHandler roadSchemaNotificationHandler,
+      @Value("#{clock}") Clock clock) {
     this.roadAdminClient = roadAdminClient;
     this.schemaStoreClient = schemaStoreClient;
     this.cidrBlockBValidator = cidrBlockBValidator;
     this.roadSchemaNotificationHandler = roadSchemaNotificationHandler;
+    this.clock = clock;
     patchMappings = mappings.stream().collect(Collectors.toMap(PatchMapping::getPath, m -> m));
   }
 
@@ -98,9 +107,10 @@ public class PaverServiceImpl implements PaverService {
     road.setTeamName(basicModel.getTeamName());
     road.setContactEmail(basicModel.getContactEmail());
     road.setEnabled(basicModel.isEnabled());
+    road.setEnabledTimeStamp(clock.instant().toEpochMilli());
     road.setPartitionPath(basicModel.getPartitionPath());
     road.setAuthorisation(getAuthorisation(basicModel));
-
+    road.setDeleted(false);
     road.setMetadata(basicModel.getMetadata());
     road.setCompatibilityMode(Road.DEFAULT_COMPATIBILITY_MODE);
 
@@ -141,14 +151,15 @@ public class PaverServiceImpl implements PaverService {
   @Override
   public void applyPatch(String name, List<PatchOperation> modelOperations) throws UnknownRoadException {
     Road road = getRoadOrThrow(name);
-
     List<PatchOperation> operations = new ArrayList<>();
     for (PatchOperation modelOperation : modelOperations) {
       PatchMapping mapping = patchMappings.get(modelOperation.getPath());
       checkArgument(mapping != null, "\"%s\" is not a valid path to patch", modelOperation.getPath());
       operations.add(mapping.convertOperation(road, modelOperation));
+      if (mapping instanceof EnabledPatchMapping) {
+        operations.add(PatchOperation.add("/enabledTimeStamp", clock.instant().toEpochMilli()));
+      }
     }
-
     roadAdminClient.updateRoad(new PatchSet(road.getName(), operations));
   }
 
@@ -238,11 +249,36 @@ public class PaverServiceImpl implements PaverService {
     roadSchemaNotificationHandler.handleSchemaDeleted(name, version);
   }
 
+  private boolean zeroActiveDestination(Map<String, Destination> destinations) {
+    return destinations == null || destinations.isEmpty();
+  }
+
+  private boolean hasNoMessages(Road road) {
+    if (!road.isEnabled()) {
+      MessageStatus messageStatus = road.getMessageStatus();
+      if (messageStatus != null && messageStatus.getNumberOfMessages() == 0
+          && road.getEnabledTimeStamp() < messageStatus.getLastUpdated()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public void deleteRoad(String name) throws UnknownRoadException {
+    Road road = getRoadOrThrow(name);
+    if (zeroActiveDestination(road.getDestinations()) && hasNoMessages(road)) {
+      roadAdminClient.updateRoad(new PatchSet(road.getName(), singletonList(PatchOperation.add("/deleted", true))));
+    } else {
+      throw new IllegalArgumentException(
+          "Road " + name + " can't be deleted. Make sure there are no active destinations, "
+              + "the road is disabled and there are no messages for this road");
+    }
+  }
+
   @FunctionalInterface
   private interface CheckedFunction<F, T> {
 
     T apply(F f) throws UnknownRoadException, ServiceException;
-
   }
-
 }

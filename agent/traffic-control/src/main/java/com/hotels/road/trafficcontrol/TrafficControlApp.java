@@ -15,9 +15,15 @@
  */
 package com.hotels.road.trafficcontrol;
 
+import static java.util.Collections.singletonMap;
+
+import java.time.Clock;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -26,12 +32,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.hotels.road.agents.trafficcop.TrafficCopConfiguration;
 import com.hotels.road.boot.DataHighwayApplication;
+import com.hotels.road.rest.controller.common.CommonClockConfiguration;
+import com.hotels.road.trafficcontrol.function.MessageCountPerTopicFunction;
 
 import kafka.utils.ZkUtils;
 
 @SpringBootApplication
 @EnableScheduling
-@Import(TrafficCopConfiguration.class)
+@Import({
+    TrafficCopConfiguration.class,
+    CommonClockConfiguration.class })
 public class TrafficControlApp {
   @Bean(destroyMethod = "close")
   public ZkUtils zkUtils(
@@ -48,11 +58,20 @@ public class TrafficControlApp {
       @Value("${kafka.default.normal.partitions:6}") int defaultNormalPartitions,
       @Value("${kafka.default.compact.partitions:120}") int defaultCompactPartitions,
       @Value("${kafka.default.replicationFactor:3}") int defaultFeplicationFactor,
-      @Value("${kafka.default.topicConfig:#{null}}") Properties defaultTopicConfig) {
+      @Value("${kafka.default.topicConfig:#{null}}") Properties defaultTopicConfig,
+      MessageCountPerTopicFunction messageCountPerTopicFunction,
+      @Value("#{clock}") Clock clock) {
     defaultTopicConfig = Optional.ofNullable(defaultTopicConfig).orElse(new Properties());
     return new KafkaAdminClient(zkUtils,
         defaultNormalPartitions, defaultCompactPartitions,
-        defaultFeplicationFactor, defaultTopicConfig);
+        defaultFeplicationFactor, defaultTopicConfig,
+        messageCountPerTopicFunction, clock);
+  }
+
+  @Bean
+  public KafkaConsumer<?, ?> kafkaConsumer(@Value("${kafka.bootstrapServers}") String bootstrapServers) {
+    Deserializer<byte[]> deserializer = new ByteArrayDeserializer();
+    return new KafkaConsumer<>(singletonMap("bootstrap.servers", bootstrapServers), deserializer, deserializer);
   }
 
   public static void main(String[] args) {
